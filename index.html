@@ -136,6 +136,9 @@
         <div id="exportDropdown" style="display:none; position:absolute; right:0; top:calc(100% + 8px); background:#fff; border:1px solid var(--border); border-radius:12px; box-shadow:0 8px 24px rgba(0,0,0,.08); padding:14px; width:220px; z-index:40;">
           <div style="font-size:12px; font-weight:700; color:var(--text-2); margin-bottom:10px;">Pilih section</div>
           <label style="display:flex; align-items:center; gap:8px; font-size:13px; margin-bottom:8px; cursor:pointer;">
+            <input type="checkbox" class="export-check" value="dashboard" checked> Dashboard (Ringkasan)
+          </label>
+          <label style="display:flex; align-items:center; gap:8px; font-size:13px; margin-bottom:8px; cursor:pointer;">
             <input type="checkbox" class="export-check" value="training" checked> Training
           </label>
           <label style="display:flex; align-items:center; gap:8px; font-size:13px; margin-bottom:12px; cursor:pointer;">
@@ -409,30 +412,44 @@ function statusBadge(status){
   return `<span class="badge ${map[status]||'badge-gray'}">${status}</span>`;
 }
 
-function renderHome(){
+function computeHomeStats(){
   const t = state.trainings, tr = state.trainers;
   const order = ['New Comer','Junior Trainer','Intermediate Trainer','Senior Trainer','Master Trainer'];
 
   const completed = t.filter(r=>r.Status==='Completed').length;
   const completionRate = t.length ? Math.round(completed/t.length*100) : 0;
-  document.getElementById('homeCompletionRate').textContent = completionRate + '%';
-  document.getElementById('homeTrainingBar').style.width = completionRate + '%';
-  document.getElementById('homeTotalTraining').textContent = t.length;
-  document.getElementById('homePeserta').textContent = t.reduce((s,r)=>s+(r.Jumlah_Peserta||0),0);
+  const totalPeserta = t.reduce((s,r)=>s+(r.Jumlah_Peserta||0),0);
 
   const promosi = tr.filter(r => r.Level_Baru_Eligible && order.indexOf(r.Level_Baru_Eligible) > order.indexOf(r.Level_Saat_Ini)).length;
   const promosiRate = tr.length ? Math.round(promosi/tr.length*100) : 0;
-  document.getElementById('homePromosiRate').textContent = promosiRate + '%';
-  document.getElementById('homeTrainerBar').style.width = promosiRate + '%';
-  document.getElementById('homeTotalTrainer').textContent = tr.length;
-  document.getElementById('homeSeniorMaster').textContent = tr.filter(r=>r.Level_Saat_Ini==='Senior Trainer'||r.Level_Saat_Ini==='Master Trainer').length;
+  const seniorMaster = tr.filter(r=>r.Level_Saat_Ini==='Senior Trainer'||r.Level_Saat_Ini==='Master Trainer').length;
 
   const formReady = t.filter(r => (state.templates[r.Training_ID]||[]).length>0 || r.Form_Template_ID).length;
   const formRate = t.length ? Math.round(formReady/t.length*100) : 0;
-  document.getElementById('homeFormCoverage').textContent = formRate + '%';
-  document.getElementById('homeFormBar').style.width = formRate + '%';
-  document.getElementById('homeFormReady').textContent = formReady;
-  document.getElementById('homeFormMissing').textContent = t.length - formReady;
+
+  return {
+    totalTraining: t.length, completed, completionRate, totalPeserta,
+    totalTrainer: tr.length, promosi, promosiRate, seniorMaster,
+    formReady, formMissing: t.length - formReady, formRate,
+  };
+}
+
+function renderHome(){
+  const s = computeHomeStats();
+  document.getElementById('homeCompletionRate').textContent = s.completionRate + '%';
+  document.getElementById('homeTrainingBar').style.width = s.completionRate + '%';
+  document.getElementById('homeTotalTraining').textContent = s.totalTraining;
+  document.getElementById('homePeserta').textContent = s.totalPeserta;
+
+  document.getElementById('homePromosiRate').textContent = s.promosiRate + '%';
+  document.getElementById('homeTrainerBar').style.width = s.promosiRate + '%';
+  document.getElementById('homeTotalTrainer').textContent = s.totalTrainer;
+  document.getElementById('homeSeniorMaster').textContent = s.seniorMaster;
+
+  document.getElementById('homeFormCoverage').textContent = s.formRate + '%';
+  document.getElementById('homeFormBar').style.width = s.formRate + '%';
+  document.getElementById('homeFormReady').textContent = s.formReady;
+  document.getElementById('homeFormMissing').textContent = s.formMissing;
 }
 
 function renderTraining(){
@@ -640,37 +657,87 @@ document.getElementById('generatePptxBtn').addEventListener('click', () => {
   document.getElementById('exportDropdown').style.display = 'none';
 });
 
-const PINK = 'E6007A', BLUE = '2563EB', PURPLE = '7C3AED', GREEN = '16A34A', DARK = '1A1A1A', GRAY = '6B6B6B', LIGHT = 'F7F5F0';
+const PINK = 'E6007A', PINK_BG = 'FCE7F1', BLUE = '2563EB', BLUE_BG = 'DBEAFE', PURPLE = '7C3AED', GREEN = '16A34A', DARK = '1A1A1A', GRAY = '6B6B6B', LIGHT = 'F7F5F0', BORDER = 'ECEAE3';
+
+function addFooter(s, accent){
+  s.addText('anteraja  ·  Training Dashboard', { x:0.4, y:5.35, w:6, h:0.25, fontSize:8, color:GRAY, fontFace:'Arial' });
+  s.addShape('rect', { x:0, y:5.63-0.06, w:10, h:0.06, fill:{color:accent} });
+}
 
 function addTitleSlide(pptx, subtitle){
   const s = pptx.addSlide();
-  s.background = { color: LIGHT };
-  s.addText('anteraja', { x:0.5, y:2.0, w:9, h:0.7, fontSize:32, bold:true, color:PINK, fontFace:'Arial' });
-  s.addText('Training Dashboard Report', { x:0.5, y:2.7, w:9, h:0.6, fontSize:20, color:DARK, fontFace:'Arial' });
-  s.addText(subtitle, { x:0.5, y:3.3, w:9, h:0.4, fontSize:12, color:GRAY, fontFace:'Arial' });
+  s.background = { color: PINK };
+  s.addShape('rect', { x:0, y:0, w:10, h:5.63, fill:{color:PINK} });
+  s.addShape('roundRect', { x:0.6, y:1.55, w:8.8, h:2.55, fill:{color:'FFFFFF'}, rectRadius:0.12, line:{type:'none'} });
+  s.addText('anteraja', { x:0.6, y:1.85, w:8.8, h:0.6, fontSize:30, bold:true, color:PINK, align:'center', fontFace:'Arial' });
+  s.addText('Training Dashboard Report', { x:0.6, y:2.5, w:8.8, h:0.55, fontSize:19, bold:true, color:DARK, align:'center', fontFace:'Arial' });
+  s.addText(subtitle, { x:0.6, y:3.15, w:8.8, h:0.4, fontSize:11, color:GRAY, align:'center', fontFace:'Arial' });
 }
 
-function addSectionHeader(s, title, accent){
-  s.addShape('rect', { x:0, y:0, w:0.12, h:0.6, fill:{color:accent} });
-  s.addText(title, { x:0.35, y:0, w:9, h:0.6, fontSize:22, bold:true, color:DARK, fontFace:'Arial', valign:'middle' });
+function addSectionHeader(s, title, subtitle, accent){
+  s.addShape('rect', { x:0, y:0, w:10, h:1.15, fill:{color:accent} });
+  s.addText(title, { x:0.5, y:0.18, w:9, h:0.55, fontSize:24, bold:true, color:'FFFFFF', fontFace:'Arial' });
+  s.addText(subtitle, { x:0.5, y:0.68, w:9, h:0.35, fontSize:11, color:'FFFFFF', fontFace:'Arial' });
 }
 
-function addKpiRow(s, kpis, accent){
-  const w = 2.2, gap = 0.15, startX = 0.4;
+function addKpiRow(s, kpis, accent, accentBg){
+  const w = 2.12, gap = 0.16, startX = 0.5, y = 1.45;
   kpis.forEach((k, i) => {
     const x = startX + i * (w + gap);
-    s.addShape('roundRect', { x, y:0.85, w, h:1.1, fill:{color:'FFFFFF'}, line:{color:'ECEAE3', width:1}, rectRadius:0.08 });
-    s.addText(String(k.value), { x, y:0.92, w, h:0.55, fontSize:24, bold:true, color:accent, align:'center', fontFace:'Arial' });
-    s.addText(k.label, { x, y:1.48, w, h:0.35, fontSize:9, color:GRAY, align:'center', fontFace:'Arial' });
+    s.addShape('roundRect', { x, y, w, h:1.15, fill:{color:accentBg}, rectRadius:0.08, line:{type:'none'} });
+    s.addText(String(k.value), { x, y:y+0.12, w, h:0.55, fontSize:26, bold:true, color:accent, align:'center', fontFace:'Arial' });
+    s.addText(k.label, { x, y:y+0.72, w, h:0.35, fontSize:9, bold:true, color:accent, align:'center', fontFace:'Arial' });
   });
 }
 
-function addTable(s, headers, rows, startY, accent){
-  const tableRows = [
-    headers.map(h => ({ text:h, options:{ bold:true, color:'FFFFFF', fill:{color:accent}, fontSize:9 } })),
-    ...rows.map(r => r.map(c => ({ text:String(c), options:{ fontSize:9, color:DARK } }))),
+function addTable(s, headers, colWidths, rows, startY, accent){
+  const headerRow = headers.map(h => ({
+    text:h, options:{ bold:true, color:'FFFFFF', fill:{color:accent}, fontSize:10, align:'left', valign:'middle' }
+  }));
+  const bodyRows = rows.map((r, ri) => r.map((c, ci) => ({
+    text:String(c),
+    options:{ fontSize:9.5, color:DARK, fill:{color: ri%2===0 ? 'FFFFFF' : 'FAFAF8'}, valign:'middle', align: ci===0?'left':'center' }
+  })));
+  s.addTable([headerRow, ...bodyRows], {
+    x:0.5, y:startY, w:9, colW:colWidths,
+    fontFace:'Arial', border:{type:'solid', color:BORDER, pt:0.5},
+    autoPage:true, autoPageRepeatHeader:true, autoPageSlideStartY:1.45,
+    rowH:0.32, valign:'middle', margin:[0.05,0.08,0.05,0.08],
+  });
+}
+
+function addDashboardSummarySlide(pptx, stats){
+  const s = pptx.addSlide(); s.background = { color:'FFFFFF' };
+  addSectionHeader(s, 'Dashboard', 'Ringkasan status Training Dashboard', PINK);
+
+  const cards = [
+    { label:'TRAINING', value:stats.completionRate+'%', sub:'Completion rate', accent:PINK, accentBg:PINK_BG,
+      mini:[[stats.totalTraining,'Total Training'],[stats.totalPeserta,'Total Peserta']] },
+    { label:'TRAINER POOL', value:stats.promosiRate+'%', sub:'Siap naik level', accent:BLUE, accentBg:BLUE_BG,
+      mini:[[stats.totalTrainer,'Total Trainer'],[stats.seniorMaster,'Senior + Master']] },
+    { label:'SETUP FORM', value:stats.formRate+'%', sub:'Training dengan form siap', accent:PURPLE, accentBg:'EDE4FB',
+      mini:[[stats.formReady,'Form Siap'],[stats.formMissing,'Belum Ada Form']] },
   ];
-  s.addTable(tableRows, { x:0.4, y:startY, w:9.2, fontFace:'Arial', border:{type:'solid', color:'ECEAE3', pt:0.5}, autoPage:true, autoPageRepeatHeader:true });
+
+  const w = 2.9, gap = 0.2, startX = 0.5, y = 1.45;
+  cards.forEach((c, i) => {
+    const x = startX + i * (w + gap);
+    s.addShape('roundRect', { x, y, w, h:3.55, fill:{color:'FFFFFF'}, line:{color:BORDER, width:0.75}, rectRadius:0.1 });
+    s.addShape('roundRect', { x, y, w, h:0.06, fill:{color:c.accent}, rectRadius:0 });
+    s.addShape('roundRect', { x:x+0.25, y:y+0.28, w:0.55, h:0.55, fill:{color:c.accentBg}, rectRadius:0.1 });
+    s.addText(c.label, { x:x+0.25, y:y+0.95, w:w-0.5, h:0.3, fontSize:9, bold:true, color:GRAY, fontFace:'Arial' });
+    s.addText(c.value, { x:x+0.25, y:y+1.22, w:w-0.5, h:0.55, fontSize:28, bold:true, color:c.accent, fontFace:'Arial' });
+    s.addText(c.sub, { x:x+0.25, y:y+1.78, w:w-0.5, h:0.3, fontSize:9.5, color:GRAY, fontFace:'Arial' });
+    s.addShape('roundRect', { x:x+0.25, y:y+2.15, w:w-0.5, h:0.08, fill:{color:'F1EFE8'}, rectRadius:0.04 });
+    s.addShape('roundRect', { x:x+0.25, y:y+2.15, w:(w-0.5)*Number((c.value+'').replace('%',''))/100, h:0.08, fill:{color:c.accent}, rectRadius:0.04 });
+    c.mini.forEach((m, mi) => {
+      const mx = x + 0.25 + mi*((w-0.5-0.1)/2+0.1);
+      s.addShape('roundRect', { x:mx, y:y+2.4, w:(w-0.5-0.1)/2, h:0.75, fill:{color:'F7F6F2'}, rectRadius:0.06 });
+      s.addText(String(m[0]), { x:mx+0.08, y:y+2.46, w:(w-0.5-0.1)/2-0.16, h:0.35, fontSize:14, bold:true, color:c.accent, fontFace:'Arial' });
+      s.addText(m[1], { x:mx+0.08, y:y+2.8, w:(w-0.5-0.1)/2-0.16, h:0.3, fontSize:7.5, color:GRAY, fontFace:'Arial' });
+    });
+  });
+  addFooter(s, PINK);
 }
 
 function generatePptx(sections){
@@ -684,6 +751,10 @@ function generatePptx(sections){
 
   addTitleSlide(pptx, 'Dibuat ' + new Date().toLocaleString('id-ID'));
 
+  if(sections.includes('dashboard')){
+    addDashboardSummarySlide(pptx, computeHomeStats());
+  }
+
   if(sections.includes('training')){
     const t = state.trainings;
     const completed = t.filter(r=>r.Status==='Completed').length;
@@ -691,17 +762,19 @@ function generatePptx(sections){
     const avgPt = withScore.length ? (withScore.reduce((s,r)=>s+r.Avg_Post_Test,0)/withScore.length).toFixed(1) : '-';
 
     const s1 = pptx.addSlide(); s1.background = { color:'FFFFFF' };
-    addSectionHeader(s1, 'Training', PINK);
+    addSectionHeader(s1, 'Training', 'Ringkasan training yang sudah dan akan dijalankan', PINK);
     addKpiRow(s1, [
       { value:t.length, label:'TOTAL TRAINING' },
       { value:completed, label:'COMPLETED' },
       { value:t.reduce((s,r)=>s+(r.Jumlah_Peserta||0),0), label:'TOTAL PESERTA' },
       { value:avgPt, label:'AVG POST-TEST' },
-    ], PINK);
+    ], PINK, PINK_BG);
     addTable(s1,
       ['Judul','Kategori','Tanggal','Divisi','Peserta','Avg PT','Status'],
+      [2.6, 1.1, 1.0, 1.5, 0.8, 0.9, 1.1],
       t.map(r => [r.Judul, r.Kategori, r.Tanggal_Mulai, r.Divisi_Target, r.Jumlah_Peserta, r.Avg_Post_Test??'-', r.Status]),
-      2.15, PINK);
+      2.95, PINK);
+    addFooter(s1, PINK);
   }
 
   if(sections.includes('trainerpool')){
@@ -711,17 +784,19 @@ function generatePptx(sections){
     const seniorMaster = tr.filter(r=>r.Level_Saat_Ini==='Senior Trainer'||r.Level_Saat_Ini==='Master Trainer').length;
 
     const s2 = pptx.addSlide(); s2.background = { color:'FFFFFF' };
-    addSectionHeader(s2, 'Trainer Pool', BLUE);
+    addSectionHeader(s2, 'Trainer Pool', 'Level dan score trainer berdasarkan semester terakhir', BLUE);
     addKpiRow(s2, [
       { value:tr.length, label:'TOTAL TRAINER' },
       { value:promosi, label:'SIAP NAIK LEVEL' },
       { value:seniorMaster, label:'SENIOR + MASTER' },
       { value:tr.filter(r=>r.Level_Saat_Ini==='New Comer').length, label:'NEW COMER' },
-    ], BLUE);
+    ], BLUE, BLUE_BG);
     addTable(s2,
       ['Nama','NIK','Divisi','Level','Semester','Score','Eligible'],
+      [1.7, 1.1, 1.5, 1.6, 1.0, 0.8, 1.3],
       tr.map(r => [r.Nama, r.Trainer_NIK, r.Divisi||'-', r.Level_Saat_Ini, r.Semester_Terakhir||'-', r.Total_Score_Terakhir??'-', r.Level_Baru_Eligible||'-']),
-      2.15, BLUE);
+      2.95, BLUE);
+    addFooter(s2, BLUE);
   }
 
   pptx.writeFile({ fileName: `Training_Dashboard_Report_${new Date().toISOString().slice(0,10)}.pptx` });
