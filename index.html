@@ -243,7 +243,10 @@
         </div>
 
         <div class="panel">
-          <div class="panel-head"><h3>Daftar Trainer</h3></div>
+          <div class="panel-head">
+            <h3>Daftar Trainer</h3>
+            <span class="link-add" id="addTrainerBtn"><i class="ti ti-plus"></i> Tambah Trainer</span>
+          </div>
           <div style="overflow-x:auto">
           <table>
             <thead><tr>
@@ -341,6 +344,45 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
+<!-- MODAL: TAMBAH TRAINER -->
+<div id="trainerModal" style="display:none; position:fixed; inset:0; background:rgba(26,26,26,.45); z-index:50; align-items:center; justify-content:center;">
+  <div style="background:#fff; border-radius:16px; width:420px; max-width:92vw; padding:26px;">
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:18px;">
+      <h3 style="font-size:17px; font-weight:700;">Tambah Trainer Baru</h3>
+      <button class="icon-btn" id="closeTrainerModalBtn" style="font-size:20px;"><i class="ti ti-x"></i></button>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:14px; font-family:'Inter',sans-serif;">
+      <div>
+        <label style="font-size:12px; font-weight:600; color:var(--text-2); display:block; margin-bottom:5px;">NIK</label>
+        <input id="tNik" class="q-text" style="width:100%">
+      </div>
+      <div>
+        <label style="font-size:12px; font-weight:600; color:var(--text-2); display:block; margin-bottom:5px;">Nama</label>
+        <input id="tNama" class="q-text" style="width:100%">
+      </div>
+      <div>
+        <label style="font-size:12px; font-weight:600; color:var(--text-2); display:block; margin-bottom:5px;">Level Awal</label>
+        <select id="tLevel" style="width:100%">
+          <option>New Comer</option><option>Junior Trainer</option><option>Intermediate Trainer</option>
+          <option>Senior Trainer</option><option>Master Trainer</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:12px; font-weight:600; color:var(--text-2); display:block; margin-bottom:5px;">Divisi</label>
+        <input id="tDivisi" class="q-text" style="width:100%">
+      </div>
+      <div>
+        <label style="font-size:12px; font-weight:600; color:var(--text-2); display:block; margin-bottom:5px;">Email</label>
+        <input id="tEmail" class="q-text" style="width:100%">
+      </div>
+    </div>
+    <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:22px;">
+      <button class="btn btn-outline" id="cancelTrainerModalBtn">Batal</button>
+      <button class="btn btn-primary" id="submitTrainerBtn"><i class="ti ti-check"></i> Simpan Trainer</button>
+    </div>
+  </div>
+</div>
+
 <script>
 /* ====== KONFIGURASI ====== */
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyN0kw_BPbD20xKFcJM9A4434EEnEQPx2f6zW0aeqcRcJUz-4XBo8QSc4GAdx9V13KZJw/exec';
@@ -867,6 +909,39 @@ document.getElementById('submitTrainingBtn').addEventListener('click', async () 
     closeModal();
     await loadAll();
     alert('Training baru tersimpan.');
+  } catch(err){
+    alert('Gagal simpan: ' + err.message);
+  }
+});
+
+document.getElementById('addTrainerBtn').addEventListener('click', () => {
+  document.getElementById('tNik').value = '';
+  document.getElementById('tNama').value = '';
+  document.getElementById('tLevel').value = 'New Comer';
+  document.getElementById('tDivisi').value = '';
+  document.getElementById('tEmail').value = '';
+  document.getElementById('trainerModal').style.display = 'flex';
+});
+document.getElementById('closeTrainerModalBtn').addEventListener('click', closeTrainerModal);
+document.getElementById('cancelTrainerModalBtn').addEventListener('click', closeTrainerModal);
+function closeTrainerModal(){ document.getElementById('trainerModal').style.display = 'none'; }
+
+document.getElementById('submitTrainerBtn').addEventListener('click', async () => {
+  const nik = document.getElementById('tNik').value.trim();
+  const nama = document.getElementById('tNama').value.trim();
+  if(!nik || !nama){ alert('NIK dan Nama wajib diisi.'); return; }
+  const payload = {
+    Trainer_NIK: nik, Nama: nama,
+    Level_Saat_Ini: document.getElementById('tLevel').value,
+    Divisi: document.getElementById('tDivisi').value.trim(),
+    Email: document.getElementById('tEmail').value.trim(),
+  };
+  try{
+    const res = await apiPost('addTrainer', payload);
+    if(res && res.error){ alert(res.error); return; }
+    closeTrainerModal();
+    await loadAll();
+    alert('Trainer baru tersimpan.');
   } catch(err){
     alert('Gagal simpan: ' + err.message);
   }
