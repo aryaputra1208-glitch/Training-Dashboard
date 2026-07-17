@@ -131,6 +131,19 @@
       <select id="filterSemester"><option>Semua Semester</option></select>
       <div class="spacer"></div>
       <span class="pill" id="syncPill">Data per —</span>
+      <div style="position:relative">
+        <button class="btn btn-outline" id="exportBtn"><i class="ti ti-presentation"></i> Export PPTX</button>
+        <div id="exportDropdown" style="display:none; position:absolute; right:0; top:calc(100% + 8px); background:#fff; border:1px solid var(--border); border-radius:12px; box-shadow:0 8px 24px rgba(0,0,0,.08); padding:14px; width:220px; z-index:40;">
+          <div style="font-size:12px; font-weight:700; color:var(--text-2); margin-bottom:10px;">Pilih section</div>
+          <label style="display:flex; align-items:center; gap:8px; font-size:13px; margin-bottom:8px; cursor:pointer;">
+            <input type="checkbox" class="export-check" value="training" checked> Training
+          </label>
+          <label style="display:flex; align-items:center; gap:8px; font-size:13px; margin-bottom:12px; cursor:pointer;">
+            <input type="checkbox" class="export-check" value="trainerpool" checked> Trainer Pool
+          </label>
+          <button class="btn btn-primary" id="generatePptxBtn" style="width:100%; font-size:12px; padding:9px;">Generate PPTX</button>
+        </div>
+      </div>
       <button class="btn btn-outline" id="refreshBtn"><i class="ti ti-refresh"></i> Refresh Data</button>
       <div class="avatar">A</div>
     </div>
@@ -324,6 +337,7 @@
   </div>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pptxgenjs/3.12.0/pptxgen.bundle.js"></script>
 <script>
 /* ====== KONFIGURASI ====== */
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyN0kw_BPbD20xKFcJM9A4434EEnEQPx2f6zW0aeqcRcJUz-4XBo8QSc4GAdx9V13KZJw/exec';
@@ -605,6 +619,109 @@ document.getElementById('saveFormBtn').addEventListener('click', async () => {
 });
 
 document.getElementById('refreshBtn').addEventListener('click', loadAll);
+
+/* ===== Export PPTX ===== */
+document.getElementById('exportBtn').addEventListener('click', (e) => {
+  e.stopPropagation();
+  const dd = document.getElementById('exportDropdown');
+  dd.style.display = dd.style.display === 'none' ? 'block' : 'none';
+});
+document.addEventListener('click', (e) => {
+  const dd = document.getElementById('exportDropdown');
+  if(dd.style.display === 'block' && !dd.contains(e.target) && e.target.id !== 'exportBtn'){
+    dd.style.display = 'none';
+  }
+});
+
+document.getElementById('generatePptxBtn').addEventListener('click', () => {
+  const sections = Array.from(document.querySelectorAll('.export-check:checked')).map(c => c.value);
+  if(!sections.length){ alert('Pilih minimal 1 section.'); return; }
+  generatePptx(sections);
+  document.getElementById('exportDropdown').style.display = 'none';
+});
+
+const PINK = 'E6007A', BLUE = '2563EB', PURPLE = '7C3AED', GREEN = '16A34A', DARK = '1A1A1A', GRAY = '6B6B6B', LIGHT = 'F7F5F0';
+
+function addTitleSlide(pptx, subtitle){
+  const s = pptx.addSlide();
+  s.background = { color: LIGHT };
+  s.addText('anteraja', { x:0.5, y:2.0, w:9, h:0.7, fontSize:32, bold:true, color:PINK, fontFace:'Arial' });
+  s.addText('Training Dashboard Report', { x:0.5, y:2.7, w:9, h:0.6, fontSize:20, color:DARK, fontFace:'Arial' });
+  s.addText(subtitle, { x:0.5, y:3.3, w:9, h:0.4, fontSize:12, color:GRAY, fontFace:'Arial' });
+}
+
+function addSectionHeader(s, title, accent){
+  s.addShape('rect', { x:0, y:0, w:0.12, h:0.6, fill:{color:accent} });
+  s.addText(title, { x:0.35, y:0, w:9, h:0.6, fontSize:22, bold:true, color:DARK, fontFace:'Arial', valign:'middle' });
+}
+
+function addKpiRow(s, kpis, accent){
+  const w = 2.2, gap = 0.15, startX = 0.4;
+  kpis.forEach((k, i) => {
+    const x = startX + i * (w + gap);
+    s.addShape('roundRect', { x, y:0.85, w, h:1.1, fill:{color:'FFFFFF'}, line:{color:'ECEAE3', width:1}, rectRadius:0.08 });
+    s.addText(String(k.value), { x, y:0.92, w, h:0.55, fontSize:24, bold:true, color:accent, align:'center', fontFace:'Arial' });
+    s.addText(k.label, { x, y:1.48, w, h:0.35, fontSize:9, color:GRAY, align:'center', fontFace:'Arial' });
+  });
+}
+
+function addTable(s, headers, rows, startY, accent){
+  const tableRows = [
+    headers.map(h => ({ text:h, options:{ bold:true, color:'FFFFFF', fill:{color:accent}, fontSize:9 } })),
+    ...rows.map(r => r.map(c => ({ text:String(c), options:{ fontSize:9, color:DARK } }))),
+  ];
+  s.addTable(tableRows, { x:0.4, y:startY, w:9.2, fontFace:'Arial', border:{type:'solid', color:'ECEAE3', pt:0.5}, autoPage:true, autoPageRepeatHeader:true });
+}
+
+function generatePptx(sections){
+  const pptx = new PptxGenJS();
+  pptx.defineLayout({ name:'WIDE', width:10, height:5.63 });
+  pptx.layout = 'WIDE';
+
+  addTitleSlide(pptx, 'Dibuat ' + new Date().toLocaleString('id-ID'));
+
+  if(sections.includes('training')){
+    const t = state.trainings;
+    const completed = t.filter(r=>r.Status==='Completed').length;
+    const withScore = t.filter(r=>r.Avg_Post_Test!=null);
+    const avgPt = withScore.length ? (withScore.reduce((s,r)=>s+r.Avg_Post_Test,0)/withScore.length).toFixed(1) : '-';
+
+    const s1 = pptx.addSlide(); s1.background = { color:'FFFFFF' };
+    addSectionHeader(s1, 'Training', PINK);
+    addKpiRow(s1, [
+      { value:t.length, label:'TOTAL TRAINING' },
+      { value:completed, label:'COMPLETED' },
+      { value:t.reduce((s,r)=>s+(r.Jumlah_Peserta||0),0), label:'TOTAL PESERTA' },
+      { value:avgPt, label:'AVG POST-TEST' },
+    ], PINK);
+    addTable(s1,
+      ['Judul','Kategori','Tanggal','Divisi','Peserta','Avg PT','Status'],
+      t.map(r => [r.Judul, r.Kategori, r.Tanggal_Mulai, r.Divisi_Target, r.Jumlah_Peserta, r.Avg_Post_Test??'-', r.Status]),
+      2.15, PINK);
+  }
+
+  if(sections.includes('trainerpool')){
+    const tr = state.trainers;
+    const order = ['New Comer','Junior Trainer','Intermediate Trainer','Senior Trainer','Master Trainer'];
+    const promosi = tr.filter(r => r.Level_Baru_Eligible && order.indexOf(r.Level_Baru_Eligible) > order.indexOf(r.Level_Saat_Ini)).length;
+    const seniorMaster = tr.filter(r=>r.Level_Saat_Ini==='Senior Trainer'||r.Level_Saat_Ini==='Master Trainer').length;
+
+    const s2 = pptx.addSlide(); s2.background = { color:'FFFFFF' };
+    addSectionHeader(s2, 'Trainer Pool', BLUE);
+    addKpiRow(s2, [
+      { value:tr.length, label:'TOTAL TRAINER' },
+      { value:promosi, label:'SIAP NAIK LEVEL' },
+      { value:seniorMaster, label:'SENIOR + MASTER' },
+      { value:tr.filter(r=>r.Level_Saat_Ini==='New Comer').length, label:'NEW COMER' },
+    ], BLUE);
+    addTable(s2,
+      ['Nama','NIK','Divisi','Level','Semester','Score','Eligible'],
+      tr.map(r => [r.Nama, r.Trainer_NIK, r.Divisi||'-', r.Level_Saat_Ini, r.Semester_Terakhir||'-', r.Total_Score_Terakhir??'-', r.Level_Baru_Eligible||'-']),
+      2.15, BLUE);
+  }
+
+  pptx.writeFile({ fileName: `Training_Dashboard_Report_${new Date().toISOString().slice(0,10)}.pptx` });
+}
 
 /* ===== Tambah Training modal ===== */
 let trainerRowCount = 0;
