@@ -337,7 +337,7 @@
   </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pptxgenjs/3.12.0/pptxgen.bundle.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
 <script>
 /* ====== KONFIGURASI ====== */
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyN0kw_BPbD20xKFcJM9A4434EEnEQPx2f6zW0aeqcRcJUz-4XBo8QSc4GAdx9V13KZJw/exec';
@@ -674,6 +674,10 @@ function addTable(s, headers, rows, startY, accent){
 }
 
 function generatePptx(sections){
+  if(typeof PptxGenJS === 'undefined'){
+    alert('Library PPTX gagal dimuat. Cek koneksi internet lalu refresh halaman.');
+    return;
+  }
   const pptx = new PptxGenJS();
   pptx.defineLayout({ name:'WIDE', width:10, height:5.63 });
   pptx.layout = 'WIDE';
