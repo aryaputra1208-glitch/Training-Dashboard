@@ -104,6 +104,12 @@
   select.q-type{border:1px solid var(--border); border-radius:8px; padding:8px 10px; font-size:12px; font-family:'Inter',sans-serif;}
   .icon-btn{background:none; border:none; color:var(--text-3); cursor:pointer; font-size:16px; padding:6px;}
   .icon-btn:hover{color:var(--red);}
+  .row-action{border:none; border-radius:8px; width:30px; height:30px; font-size:15px; display:flex; align-items:center; justify-content:center; padding:0;}
+  .row-action.ra-gray{background:#F1EFE8; color:#444441;}
+  .row-action.ra-pink{background:var(--pink-bg); color:var(--pink-dark);}
+  .row-action.ra-purple{background:var(--purple-bg); color:var(--purple);}
+  .row-action.ra-blue{background:var(--blue-bg); color:var(--blue);}
+  .row-action:hover{filter:brightness(0.94);}
   .panel-foot{padding:14px 20px; display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--border); font-family:'Inter',sans-serif;}
   .link-add{color:var(--pink); font-weight:700; font-size:13px; cursor:pointer; display:inline-flex; align-items:center; gap:6px; font-family:'Inter',sans-serif;}
 </style>
@@ -478,7 +484,7 @@
 <script>
 /* ====== KONFIGURASI ====== */
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyN0kw_BPbD20xKFcJM9A4434EEnEQPx2f6zW0aeqcRcJUz-4XBo8QSc4GAdx9V13KZJw/exec';
-const TRAINEE_FORM_BASE_URL = 'https://aryaputra1208-glitch.github.io/Post_Test-CSI/trainee_form.html';
+const TRAINEE_FORM_BASE_URL = 'https://aryaputra1208-glitch.github.io/Post_Test-CSI/';
 
 const MOCK_TRAININGS = [
   {Training_ID:'TRN-2026-001', Judul:'Training for Staging Store Cycle 1', Kategori:'Basic/Fundamental', Tanggal_Mulai:'2026-01-15', Tanggal_Selesai:'2026-01-15', Divisi_Target:'OPERATION', Status:'Completed', Trainers:['Heru Pramana'], Jumlah_Peserta:40, Avg_Post_Test:94.67},
@@ -658,11 +664,11 @@ function renderTraining(){
       <td>${r.Avg_Post_Test!=null ? r.Avg_Post_Test : '-'}</td>
       <td>${statusBadge(r._status)}</td>
       <td>
-        <div style="display:flex; gap:2px;">
-          <button class="icon-btn" onclick="openEditModal('${r.Training_ID}')" title="Edit Training"><i class="ti ti-edit"></i></button>
-          <button class="icon-btn" style="color:var(--pink)" onclick="openRosterModal('${r.Training_ID}','${r.Judul.replace(/'/g,"\\'")}')" title="Kelola Peserta"><i class="ti ti-user-plus"></i></button>
-          <button class="icon-btn" style="color:${r.PostTest_Open?'var(--green)':'var(--text-3)'}" onclick="togglePublish('${r.Training_ID}', ${!r.PostTest_Open})" title="${r.PostTest_Open?'Post-Test sudah dibuka — klik untuk tutup':'Buka akses Post-Test & CSI'}"><i class="ti ${r.PostTest_Open?'ti-lock-open':'ti-lock'}"></i></button>
-          <button class="icon-btn" onclick="copyFormLink('${r.Training_ID}')" title="Copy Link Form"><i class="ti ti-link"></i></button>
+        <div style="display:flex; gap:6px; flex-wrap:wrap;">
+          <button class="icon-btn row-action ra-gray" onclick="openEditModal('${r.Training_ID}')" title="Edit Training"><i class="ti ti-settings"></i></button>
+          <button class="icon-btn row-action ra-pink" onclick="openRosterModal('${r.Training_ID}','${r.Judul.replace(/'/g,"\\'")}')" title="Kelola Peserta"><i class="ti ti-user"></i></button>
+          <button class="icon-btn row-action ${r.PostTest_Open?'ra-purple':'ra-gray'}" onclick="togglePublish('${r.Training_ID}', ${!r.PostTest_Open})" title="${r.PostTest_Open?'Post-Test sudah dibuka — klik untuk tutup':'Buka akses Post-Test & CSI'}"><i class="ti ${r.PostTest_Open?'ti-file-text':'ti-file-off'}"></i></button>
+          <button class="icon-btn row-action ra-blue" onclick="copyFormLink('${r.Training_ID}')" title="Copy Link Form"><i class="ti ti-link"></i></button>
         </div>
       </td>
     </tr>`).join('');
