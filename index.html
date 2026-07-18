@@ -104,7 +104,7 @@
   select.q-type{border:1px solid var(--border); border-radius:8px; padding:8px 10px; font-size:12px; font-family:'Inter',sans-serif;}
   .icon-btn{background:none; border:none; color:var(--text-3); cursor:pointer; font-size:16px; padding:6px;}
   .icon-btn:hover{color:var(--red);}
-  .row-action{border:none; border-radius:8px; width:30px; height:30px; font-size:15px; display:flex; align-items:center; justify-content:center; padding:0;}
+  .row-action{border:none; border-radius:8px; width:30px; height:30px; font-size:15px; display:inline-flex; align-items:center; justify-content:center; padding:0; flex-shrink:0;}
   .row-action.ra-gray{background:#F1EFE8; color:#444441;}
   .row-action.ra-pink{background:var(--pink-bg); color:var(--pink-dark);}
   .row-action.ra-purple{background:var(--purple-bg); color:var(--purple);}
@@ -120,12 +120,12 @@
   <div class="sidebar">
     <div class="logo">anteraja <span>Training Dashboard</span></div>
     <div class="menu-label">MENU</div>
-    <div class="menu-item active" data-tab="home"><i class="ti ti-home"></i> Dashboard</div>
+    <div class="menu-item active" data-tab="home">🏠 Dashboard</div>
     <div class="menu-label">MODUL</div>
-    <div class="menu-item" data-tab="training"><i class="ti ti-clipboard-list"></i> Training</div>
-    <div class="menu-item" data-tab="attendance"><i class="ti ti-user-check"></i> Attendance</div>
-    <div class="menu-item" data-tab="trainerpool"><i class="ti ti-users"></i> Trainer Pool</div>
-    <div class="menu-item" data-tab="setupform"><i class="ti ti-forms"></i> Setup Form</div>
+    <div class="menu-item" data-tab="training">📋 Training</div>
+    <div class="menu-item" data-tab="attendance">✅ Attendance</div>
+    <div class="menu-item" data-tab="trainerpool">👥 Trainer Pool</div>
+    <div class="menu-item" data-tab="setupform">📝 Setup Form</div>
     <div class="sidebar-info">
       <div id="lastSync">Memuat data...</div>
       <div style="margin-top:6px">Google Sheets sync tersedia via tombol Refresh Data</div>
@@ -139,7 +139,7 @@
       <div class="spacer"></div>
       <span class="pill" id="syncPill">Data per —</span>
       <div style="position:relative">
-        <button class="btn btn-outline" id="exportBtn"><i class="ti ti-presentation"></i> Export PPTX</button>
+        <button class="btn btn-outline" id="exportBtn">📊 Export PPTX</button>
         <div id="exportDropdown" style="display:none; position:absolute; right:0; top:calc(100% + 8px); background:#fff; border:1px solid var(--border); border-radius:12px; box-shadow:0 8px 24px rgba(0,0,0,.08); padding:14px; width:220px; z-index:40;">
           <div style="font-size:12px; font-weight:700; color:var(--text-2); margin-bottom:10px;">Pilih section</div>
           <label style="display:flex; align-items:center; gap:8px; font-size:13px; margin-bottom:8px; cursor:pointer;">
@@ -157,7 +157,7 @@
           <button class="btn btn-primary" id="generatePptxBtn" style="width:100%; font-size:12px; padding:9px;">Generate PPTX</button>
         </div>
       </div>
-      <button class="btn btn-outline" id="refreshBtn"><i class="ti ti-refresh"></i> Refresh Data</button>
+      <button class="btn btn-outline" id="refreshBtn">🔄 Refresh Data</button>
       <div class="avatar">A</div>
     </div>
 
@@ -170,7 +170,7 @@
 
         <div class="module-row">
           <div class="module-card" style="--accent:var(--pink); --accent-bg:var(--pink-bg)">
-            <div class="module-icon"><i class="ti ti-clipboard-list"></i></div>
+            <div class="module-icon">📋</div>
             <div class="module-label">TRAINING</div>
             <div class="big-num" id="homeCompletionRate">-</div>
             <div class="module-sub">CoE Completion rate</div>
@@ -183,7 +183,7 @@
           </div>
 
           <div class="module-card" style="--accent:var(--blue); --accent-bg:var(--blue-bg)">
-            <div class="module-icon"><i class="ti ti-users"></i></div>
+            <div class="module-icon">👥</div>
             <div class="module-label">TRAINER POOL</div>
             <div class="big-num" id="homePromosiRate">-</div>
             <div class="module-sub">Siap naik level</div>
@@ -196,7 +196,7 @@
           </div>
 
           <div class="module-card" style="--accent:var(--purple); --accent-bg:var(--purple-bg)">
-            <div class="module-icon"><i class="ti ti-forms"></i></div>
+            <div class="module-icon">📝</div>
             <div class="module-label">SETUP FORM</div>
             <div class="big-num" id="homeFormCoverage">-</div>
             <div class="module-sub">Training dengan form siap</div>
@@ -209,7 +209,7 @@
           </div>
 
           <div class="module-card" style="--accent:var(--amber); --accent-bg:var(--amber-bg)">
-            <div class="module-icon"><i class="ti ti-user-check"></i></div>
+            <div class="module-icon">✅</div>
             <div class="module-label">ATTENDANCE</div>
             <div class="big-num" id="homeAttRate">-</div>
             <div class="module-sub">Avg attendance rate</div>
@@ -262,7 +262,7 @@
         <div class="panel">
           <div class="panel-head">
             <h3>Daftar Training</h3>
-            <span class="link-add" id="addTrainingBtn"><i class="ti ti-plus"></i> Tambah Training</span>
+            <span class="link-add" id="addTrainingBtn">➕ Tambah Training</span>
           </div>
           <div style="overflow-x:auto">
           <table>
@@ -273,7 +273,7 @@
             <tbody id="trainingTableBody"></tbody>
           </table>
           </div>
-          <div id="trainingEmpty" class="empty" style="display:none"><i class="ti ti-inbox"></i>Belum ada data training</div>
+          <div id="trainingEmpty" class="empty" style="display:none">📭Belum ada data training</div>
         </div>
       </div>
 
@@ -299,7 +299,7 @@
             <tbody id="attendanceTableBody"></tbody>
           </table>
           </div>
-          <div id="attendanceEmpty" class="empty" style="display:none"><i class="ti ti-inbox"></i>Belum ada training dengan roster peserta — klik ikon "Kelola Peserta" di tab Training</div>
+          <div id="attendanceEmpty" class="empty" style="display:none">📭Belum ada training dengan roster peserta — klik ikon "Kelola Peserta" di tab Training</div>
         </div>
       </div>
 
@@ -318,7 +318,7 @@
         <div class="panel">
           <div class="panel-head">
             <h3>Daftar Trainer</h3>
-            <span class="link-add" id="addTrainerBtn"><i class="ti ti-plus"></i> Tambah Trainer</span>
+            <span class="link-add" id="addTrainerBtn">➕ Tambah Trainer</span>
           </div>
           <div style="overflow-x:auto">
           <table>
@@ -329,7 +329,7 @@
             <tbody id="trainerTableBody"></tbody>
           </table>
           </div>
-          <div id="trainerEmpty" class="empty" style="display:none"><i class="ti ti-inbox"></i>Belum ada data trainer</div>
+          <div id="trainerEmpty" class="empty" style="display:none">📭Belum ada data trainer</div>
         </div>
       </div>
 
@@ -347,12 +347,12 @@
           <div class="panel">
             <div class="panel-head">
               <h3 id="formPanelTitle">Pilih training di sebelah kiri</h3>
-              <span class="link-add" id="addQuestionBtn" style="display:none"><i class="ti ti-plus"></i> Tambah soal</span>
+              <span class="link-add" id="addQuestionBtn" style="display:none">➕ Tambah soal</span>
             </div>
             <div id="questionList"></div>
             <div class="panel-foot" id="formPanelFoot" style="display:none">
               <span style="color:var(--text-3); font-size:12px" id="questionCount"></span>
-              <button class="btn btn-primary" id="saveFormBtn"><i class="ti ti-device-floppy"></i> Simpan Form</button>
+              <button class="btn btn-primary" id="saveFormBtn">💾 Simpan Form</button>
             </div>
           </div>
         </div>
@@ -367,7 +367,7 @@
   <div style="background:#fff; border-radius:16px; width:640px; max-width:92vw; max-height:88vh; overflow-y:auto; padding:26px;">
     <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:18px;">
       <h3 style="font-size:17px; font-weight:700;" id="trainingModalTitle">Tambah Training Baru</h3>
-      <button class="icon-btn" id="closeModalBtn" style="font-size:20px;"><i class="ti ti-x"></i></button>
+      <button class="icon-btn" id="closeModalBtn" style="font-size:20px;">✕</button>
     </div>
 
     <div style="display:flex; flex-direction:column; gap:14px; font-family:'Inter',sans-serif;">
@@ -404,7 +404,7 @@
       <div>
         <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
           <label style="font-size:12px; font-weight:600; color:var(--text-2);">Sesi & Trainer (opsional, bisa dilengkapi belakangan)</label>
-          <span class="link-add" id="addTrainerRowBtn" style="font-size:12px;"><i class="ti ti-plus"></i> Tambah sesi</span>
+          <span class="link-add" id="addTrainerRowBtn" style="font-size:12px;">➕ Tambah sesi</span>
         </div>
         <div id="trainerRows" style="display:flex; flex-direction:column; gap:8px;"></div>
       </div>
@@ -412,7 +412,7 @@
 
     <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:22px;">
       <button class="btn btn-outline" id="cancelModalBtn">Batal</button>
-      <button class="btn btn-primary" id="submitTrainingBtn"><i class="ti ti-check"></i> Simpan Training</button>
+      <button class="btn btn-primary" id="submitTrainingBtn">✓ Simpan Training</button>
     </div>
   </div>
 </div>
@@ -423,7 +423,7 @@
   <div style="background:#fff; border-radius:16px; width:420px; max-width:92vw; padding:26px;">
     <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:18px;">
       <h3 style="font-size:17px; font-weight:700;">Tambah Trainer Baru</h3>
-      <button class="icon-btn" id="closeTrainerModalBtn" style="font-size:20px;"><i class="ti ti-x"></i></button>
+      <button class="icon-btn" id="closeTrainerModalBtn" style="font-size:20px;">✕</button>
     </div>
     <div style="display:flex; flex-direction:column; gap:14px; font-family:'Inter',sans-serif;">
       <div>
@@ -452,7 +452,7 @@
     </div>
     <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:22px;">
       <button class="btn btn-outline" id="cancelTrainerModalBtn">Batal</button>
-      <button class="btn btn-primary" id="submitTrainerBtn"><i class="ti ti-check"></i> Simpan Trainer</button>
+      <button class="btn btn-primary" id="submitTrainerBtn">✓ Simpan Trainer</button>
     </div>
   </div>
 </div>
@@ -462,7 +462,7 @@
   <div style="background:#fff; border-radius:16px; width:600px; max-width:92vw; max-height:88vh; overflow-y:auto; padding:26px;">
     <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;">
       <h3 style="font-size:17px; font-weight:700;">Kelola Peserta</h3>
-      <button class="icon-btn" id="closeRosterModalBtn" style="font-size:20px;"><i class="ti ti-x"></i></button>
+      <button class="icon-btn" id="closeRosterModalBtn" style="font-size:20px;">✕</button>
     </div>
     <div style="font-size:13px; color:var(--text-2); margin-bottom:16px;" id="rosterModalTraining"></div>
 
@@ -476,7 +476,7 @@
 
     <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:18px;">
       <button class="btn btn-outline" id="cancelRosterModalBtn">Batal</button>
-      <button class="btn btn-primary" id="submitRosterBtn"><i class="ti ti-check"></i> Simpan Roster</button>
+      <button class="btn btn-primary" id="submitRosterBtn">✓ Simpan Roster</button>
     </div>
   </div>
 </div>
@@ -663,12 +663,12 @@ function renderTraining(){
       <td>${r.Jumlah_Peserta}</td>
       <td>${r.Avg_Post_Test!=null ? r.Avg_Post_Test : '-'}</td>
       <td>${statusBadge(r._status)}</td>
-      <td>
-        <div style="display:flex; gap:6px; flex-wrap:wrap;">
-          <button class="icon-btn row-action ra-gray" onclick="openEditModal('${r.Training_ID}')" title="Edit Training"><i class="ti ti-settings"></i></button>
-          <button class="icon-btn row-action ra-pink" onclick="openRosterModal('${r.Training_ID}','${r.Judul.replace(/'/g,"\\'")}')" title="Kelola Peserta"><i class="ti ti-user"></i></button>
-          <button class="icon-btn row-action ${r.PostTest_Open?'ra-purple':'ra-gray'}" onclick="togglePublish('${r.Training_ID}', ${!r.PostTest_Open})" title="${r.PostTest_Open?'Post-Test sudah dibuka — klik untuk tutup':'Buka akses Post-Test & CSI'}"><i class="ti ${r.PostTest_Open?'ti-file-text':'ti-file-off'}"></i></button>
-          <button class="icon-btn row-action ra-blue" onclick="copyFormLink('${r.Training_ID}')" title="Copy Link Form"><i class="ti ti-link"></i></button>
+      <td style="white-space:nowrap;">
+        <div style="display:flex; gap:6px; flex-wrap:nowrap;">
+          <button class="icon-btn row-action ra-gray" onclick="openEditModal('${r.Training_ID}')" title="Edit Training">⚙️</button>
+          <button class="icon-btn row-action ra-pink" onclick="openRosterModal('${r.Training_ID}','${r.Judul.replace(/'/g,"\\'")}')" title="Kelola Peserta">👤</button>
+          <button class="icon-btn row-action ${r.PostTest_Open?'ra-purple':'ra-gray'}" onclick="togglePublish('${r.Training_ID}', ${!r.PostTest_Open})" title="${r.PostTest_Open?'Post-Test sudah dibuka — klik untuk tutup':'Buka akses Post-Test & CSI'}">📄</button>
+          <button class="icon-btn row-action ra-blue" onclick="copyFormLink('${r.Training_ID}')" title="Copy Link Form">🔗</button>
         </div>
       </td>
     </tr>`).join('');
@@ -753,7 +753,7 @@ function renderTrainingPickList(){
   const el = document.getElementById('trainingPickList');
   el.innerHTML = state.trainings.map(t => `
     <div class="menu-item" style="margin:6px 10px;" onclick="selectTraining('${t.Training_ID}')">
-      <i class="ti ti-file-text"></i>
+      📄
       <div style="min-width:0">
         <div style="font-weight:700; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis">${t.Judul}</div>
         <div class="q-meta">${t.Training_ID}</div>
@@ -783,7 +783,7 @@ function renderQuestions(){
   const qs = state.activeQuestions;
   document.getElementById('questionCount').textContent = `${qs.length} soal`;
   if(!qs.length){
-    el.innerHTML = `<div class="empty"><i class="ti ti-file-off"></i>Belum ada soal — klik "Tambah soal"</div>`;
+    el.innerHTML = `<div class="empty">📭Belum ada soal — klik "Tambah soal"</div>`;
     return;
   }
   el.innerHTML = qs.map((q,i) => {
@@ -803,7 +803,7 @@ function renderQuestions(){
         </select>
         <input class="q-text" value="${(q.Question_Text||'').replace(/"/g,'&quot;')}" placeholder="Teks pertanyaan"
           oninput="updateQuestion(${i},'Question_Text',this.value)">
-        <button class="icon-btn" onclick="removeQuestion(${i})" title="Hapus soal"><i class="ti ti-trash"></i></button>
+        <button class="icon-btn" onclick="removeQuestion(${i})" title="Hapus soal">🗑️</button>
       </div>
       ${isMC ? `
       <div style="padding-left:120px; display:flex; flex-direction:column; gap:6px;">
@@ -815,9 +815,9 @@ function renderQuestions(){
             ` : ''}
             <input class="q-text" style="flex:1" value="${opt.replace(/"/g,'&quot;')}"
               oninput="updateOption(${i},${oi},this.value)" placeholder="Pilihan ${oi+1}">
-            <button class="icon-btn" onclick="removeOption(${i},${oi})" title="Hapus pilihan"><i class="ti ti-x"></i></button>
+            <button class="icon-btn" onclick="removeOption(${i},${oi})" title="Hapus pilihan">✕</button>
           </div>`).join('')}
-        <span class="link-add" style="font-size:12px;" onclick="addOption(${i})"><i class="ti ti-plus"></i> Tambah pilihan</span>
+        <span class="link-add" style="font-size:12px;" onclick="addOption(${i})">➕ Tambah pilihan</span>
         ${q.Question_Type==='PostTest' ? `<div class="q-meta">Klik bulatan di kiri pilihan untuk tandai jawaban benar.</div>` : ''}
       </div>` : ''}
     </div>`;
@@ -1086,7 +1086,7 @@ function addTrainerRow(prefill){
     <input class="q-text" placeholder="Nama Trainer" data-field="nama" value="${p.Trainer_Nama||''}">
     <input class="q-text" type="date" data-field="tanggal" value="${p.Tanggal||''}">
     <input class="q-text" type="number" step="0.5" placeholder="Jam" data-field="durasi" value="${p.Durasi||''}">
-    <button class="icon-btn" onclick="document.getElementById('trainerRow-${id}').remove()"><i class="ti ti-trash"></i></button>
+    <button class="icon-btn" onclick="document.getElementById('trainerRow-${id}').remove()">🗑️</button>
   `;
   el.appendChild(row);
 }
