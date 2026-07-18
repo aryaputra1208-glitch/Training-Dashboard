@@ -163,7 +163,7 @@
             <div class="module-icon"><i class="ti ti-clipboard-list"></i></div>
             <div class="module-label">TRAINING</div>
             <div class="big-num" id="homeCompletionRate">-</div>
-            <div class="module-sub">Completion rate</div>
+            <div class="module-sub">CoE Completion rate</div>
             <div class="progress-track"><div class="progress-fill" id="homeTrainingBar" style="width:0%"></div></div>
             <div class="mini-grid">
               <div class="mini-stat"><div class="mini-num" id="homeTotalTraining">-</div><div class="mini-label">Total Training</div></div>
@@ -206,10 +206,22 @@
         <div class="subtitle">Daftar training yang sudah dan akan dijalankan</div>
 
         <div class="kpi-row">
-          <div class="kpi-card" style="--accent:var(--pink)"><div class="kpi-label">TOTAL TRAINING</div><div class="kpi-value" id="kpiTotalTraining">-</div><div class="kpi-sub">Semua status</div></div>
-          <div class="kpi-card" style="--accent:var(--green)"><div class="kpi-label">COMPLETED</div><div class="kpi-value" id="kpiCompleted">-</div><div class="kpi-sub">Sudah selesai</div></div>
-          <div class="kpi-card" style="--accent:var(--blue)"><div class="kpi-label">TOTAL PESERTA</div><div class="kpi-value" id="kpiPeserta">-</div><div class="kpi-sub">Semua training</div></div>
-          <div class="kpi-card" style="--accent:var(--purple)"><div class="kpi-label">AVG POST-TEST</div><div class="kpi-value" id="kpiAvgPT">-</div><div class="kpi-sub">Rata-rata keseluruhan</div></div>
+          <div class="kpi-card" style="--accent:var(--pink)"><div class="kpi-label">TOTAL TRAINING</div><div class="kpi-value" id="kpiTotalTraining">-</div><div class="kpi-sub">Tahun berjalan</div></div>
+          <div class="kpi-card" style="--accent:var(--green)"><div class="kpi-label">COMPLETION RATE</div><div class="kpi-value" id="kpiCompletionRate">-</div><div class="kpi-sub">Done / (Total - Cancelled)</div></div>
+          <div class="kpi-card" style="--accent:var(--amber)"><div class="kpi-label">OUTSTANDING BULAN INI</div><div class="kpi-value" id="kpiOutMonth">-</div><div class="kpi-sub">Lewat tanggal, belum ada post-test</div></div>
+          <div class="kpi-card" style="--accent:var(--red)"><div class="kpi-label">OUTSTANDING TAHUN INI</div><div class="kpi-value" id="kpiOutYear">-</div><div class="kpi-sub">Semua bulan</div></div>
+        </div>
+
+        <div class="panel" style="margin-bottom:20px; padding:18px 20px;">
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
+            <h3 style="font-size:14px; font-weight:700;">Kalender training <span id="calYear" style="color:var(--text-3); font-weight:500;"></span></h3>
+            <div style="display:flex; gap:14px; font-size:11px; color:var(--text-2);">
+              <span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--green);margin-right:4px;"></span>Done</span>
+              <span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--blue);margin-right:4px;"></span>Planned</span>
+              <span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--red);margin-right:4px;"></span>Outstanding</span>
+            </div>
+          </div>
+          <div id="calGrid" style="display:grid; grid-template-columns:repeat(6,1fr); gap:8px;"></div>
         </div>
 
         <div class="panel">
@@ -392,6 +404,7 @@ const MOCK_TRAININGS = [
   {Training_ID:'TRN-2026-002', Judul:'Training for Staging Store Cycle 2', Kategori:'Core/Mandatory', Tanggal_Mulai:'2026-02-10', Tanggal_Selesai:'2026-02-10', Divisi_Target:'OPERATION', Status:'Completed', Trainers:['Heru Pramana'], Jumlah_Peserta:69, Avg_Post_Test:98.84},
   {Training_ID:'TRN-2026-003', Judul:'Training for Section Head', Kategori:'Core/Mandatory', Tanggal_Mulai:'2026-03-02', Tanggal_Selesai:'2026-03-03', Divisi_Target:'ALL DIVISION', Status:'Completed', Trainers:['Heru Pramana','Ardiansyah','Jayadi','Widia','Messy'], Jumlah_Peserta:23, Avg_Post_Test:81.9},
   {Training_ID:'TRN-2026-004', Judul:'HC Essentials', Kategori:'General', Tanggal_Mulai:'2026-04-05', Tanggal_Selesai:'2026-04-05', Divisi_Target:'HUMAN CAPITAL', Status:'Scheduled', Trainers:['Ardiansyah'], Jumlah_Peserta:0, Avg_Post_Test:null},
+  {Training_ID:'TRN-2026-005', Judul:'Leadership Bootcamp', Kategori:'Core/Mandatory', Tanggal_Mulai:'2026-09-14', Tanggal_Selesai:'2026-09-14', Divisi_Target:'OPERATION', Status:'Scheduled', Trainers:['Heru Pramana'], Jumlah_Peserta:0, Avg_Post_Test:null},
 ];
 
 const MOCK_TRAINERS = [
@@ -449,17 +462,37 @@ async function loadAll(){
   renderTrainingPickList();
 }
 
+/** Status training TIDAK diambil mentah dari kolom Status — kecuali Cancelled,
+ * status selalu di-derive dari tanggal + ada/tidaknya data post-test:
+ * Done (sudah ada data) / Planned (tanggal masih di depan) / Outstanding
+ * (tanggal sudah lewat tapi belum ada data). */
+function getComputedStatus(t, today){
+  if(t.Status === 'Cancelled') return 'Cancelled';
+  if((t.Jumlah_Peserta||0) > 0) return 'Done';
+  const start = new Date(t.Tanggal_Mulai);
+  return start > today ? 'Planned' : 'Outstanding';
+}
+
 function statusBadge(status){
-  const map = {Completed:'badge-green', Scheduled:'badge-amber', Ongoing:'badge-blue', Cancelled:'badge-red'};
+  const map = {Done:'badge-green', Planned:'badge-blue', Outstanding:'badge-red', Cancelled:'badge-gray'};
   return `<span class="badge ${map[status]||'badge-gray'}">${status}</span>`;
 }
 
 function computeHomeStats(){
   const t = state.trainings, tr = state.trainers;
   const order = ['New Comer','Junior Trainer','Intermediate Trainer','Senior Trainer','Master Trainer'];
+  const today = new Date();
+  const thisYear = today.getFullYear();
+  const thisMonth = today.getMonth() + 1;
 
-  const completed = t.filter(r=>r.Status==='Completed').length;
-  const completionRate = t.length ? Math.round(completed/t.length*100) : 0;
+  const withStatus = t.map(r => ({...r, _status: getComputedStatus(r, today)}));
+  const thisYearTrainings = withStatus.filter(r => new Date(r.Tanggal_Mulai).getFullYear() === thisYear);
+  const done = thisYearTrainings.filter(r => r._status === 'Done').length;
+  const cancelled = thisYearTrainings.filter(r => r._status === 'Cancelled').length;
+  const denom = thisYearTrainings.length - cancelled;
+  const completionRate = denom > 0 ? Math.round(done/denom*100) : 0;
+  const outstandingYear = thisYearTrainings.filter(r => r._status === 'Outstanding').length;
+  const outstandingMonth = thisYearTrainings.filter(r => r._status === 'Outstanding' && new Date(r.Tanggal_Mulai).getMonth()+1 === thisMonth).length;
   const totalPeserta = t.reduce((s,r)=>s+(r.Jumlah_Peserta||0),0);
 
   const promosi = tr.filter(r => r.Level_Baru_Eligible && order.indexOf(r.Level_Baru_Eligible) > order.indexOf(r.Level_Saat_Ini)).length;
@@ -470,7 +503,8 @@ function computeHomeStats(){
   const formRate = t.length ? Math.round(formReady/t.length*100) : 0;
 
   return {
-    totalTraining: t.length, completed, completionRate, totalPeserta,
+    totalTraining: t.length, totalTrainingYear: thisYearTrainings.length, done, completionRate,
+    outstandingYear, outstandingMonth, totalPeserta,
     totalTrainer: tr.length, promosi, promosiRate, seniorMaster,
     formReady, formMissing: t.length - formReady, formRate,
   };
@@ -495,13 +529,20 @@ function renderHome(){
 }
 
 function renderTraining(){
-  const rows = state.trainings;
-  document.getElementById('kpiTotalTraining').textContent = rows.length;
-  document.getElementById('kpiCompleted').textContent = rows.filter(r=>r.Status==='Completed').length;
-  document.getElementById('kpiPeserta').textContent = rows.reduce((s,r)=>s+(r.Jumlah_Peserta||0),0);
-  const withScore = rows.filter(r=>r.Avg_Post_Test!=null);
-  document.getElementById('kpiAvgPT').textContent = withScore.length
-    ? (withScore.reduce((s,r)=>s+r.Avg_Post_Test,0)/withScore.length).toFixed(1) : '-';
+  const today = new Date();
+  const thisYear = today.getFullYear();
+  const thisMonth = today.getMonth() + 1;
+  const rows = state.trainings.map(r => ({...r, _status: getComputedStatus(r, today)}));
+  const thisYearRows = rows.filter(r => new Date(r.Tanggal_Mulai).getFullYear() === thisYear);
+  const done = thisYearRows.filter(r=>r._status==='Done').length;
+  const cancelled = thisYearRows.filter(r=>r._status==='Cancelled').length;
+  const denom = thisYearRows.length - cancelled;
+  const rate = denom > 0 ? Math.round(done/denom*100) : 0;
+
+  document.getElementById('kpiTotalTraining').textContent = thisYearRows.length;
+  document.getElementById('kpiCompletionRate').textContent = rate + '%';
+  document.getElementById('kpiOutMonth').textContent = thisYearRows.filter(r=>r._status==='Outstanding' && new Date(r.Tanggal_Mulai).getMonth()+1===thisMonth).length;
+  document.getElementById('kpiOutYear').textContent = thisYearRows.filter(r=>r._status==='Outstanding').length;
 
   const tbody = document.getElementById('trainingTableBody');
   tbody.innerHTML = rows.map(r => `
@@ -513,9 +554,31 @@ function renderTraining(){
       <td>${(r.Trainers||[]).join(', ')||'-'}</td>
       <td>${r.Jumlah_Peserta}</td>
       <td>${r.Avg_Post_Test!=null ? r.Avg_Post_Test : '-'}</td>
-      <td>${statusBadge(r.Status)}</td>
+      <td>${statusBadge(r._status)}</td>
     </tr>`).join('');
   document.getElementById('trainingEmpty').style.display = rows.length ? 'none' : 'block';
+
+  renderCalendar(thisYearRows, thisYear);
+}
+
+function renderCalendar(rows, year){
+  const MONTHS = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+  document.getElementById('calYear').textContent = year;
+  const byMonth = Array.from({length:12}, () => ({Done:0, Planned:0, Outstanding:0, Cancelled:0}));
+  rows.forEach(r => {
+    const m = new Date(r.Tanggal_Mulai).getMonth();
+    byMonth[m][r._status] = (byMonth[m][r._status]||0) + 1;
+  });
+  const colorFor = (m) => m.Outstanding>0 ? 'var(--red)' : m.Planned>0 ? 'var(--blue)' : m.Done>0 ? 'var(--green)' : null;
+  const bgFor = (c) => c==='var(--red)' ? 'var(--red-bg)' : c==='var(--blue)' ? 'var(--blue-bg)' : c==='var(--green)' ? 'var(--green-bg)' : 'var(--stat-bg)';
+  document.getElementById('calGrid').innerHTML = byMonth.map((m,i) => {
+    const total = m.Done + m.Planned + m.Outstanding + m.Cancelled;
+    const c = colorFor(m);
+    return `<div style="background:${bgFor(c)}; border-radius:10px; padding:10px 6px; text-align:center;">
+      <div style="font-size:11px; color:var(--text-2); margin-bottom:4px;">${MONTHS[i]}</div>
+      <div style="font-size:16px; font-weight:700; color:${c||'var(--text-3)'};">${total||'-'}</div>
+    </div>`;
+  }).join('');
 }
 
 function levelBadgeClass(level){
@@ -798,23 +861,28 @@ function generatePptx(sections){
   }
 
   if(sections.includes('training')){
-    const t = state.trainings;
-    const completed = t.filter(r=>r.Status==='Completed').length;
-    const withScore = t.filter(r=>r.Avg_Post_Test!=null);
-    const avgPt = withScore.length ? (withScore.reduce((s,r)=>s+r.Avg_Post_Test,0)/withScore.length).toFixed(1) : '-';
+    const today = new Date();
+    const thisYear = today.getFullYear();
+    const t = state.trainings.map(r => ({...r, _status: getComputedStatus(r, today)}));
+    const thisYearT = t.filter(r => new Date(r.Tanggal_Mulai).getFullYear() === thisYear);
+    const done = thisYearT.filter(r=>r._status==='Done').length;
+    const cancelled = thisYearT.filter(r=>r._status==='Cancelled').length;
+    const denom = thisYearT.length - cancelled;
+    const rate = denom > 0 ? Math.round(done/denom*100) : 0;
+    const outstanding = thisYearT.filter(r=>r._status==='Outstanding').length;
 
     const s1 = pptx.addSlide(); s1.background = { color:'FFFFFF' };
-    addSectionHeader(s1, 'Training', 'Ringkasan training yang sudah dan akan dijalankan', PINK);
+    addSectionHeader(s1, 'Training', `Ringkasan training tahun ${thisYear}`, PINK);
     addKpiRow(s1, [
-      { value:t.length, label:'TOTAL TRAINING' },
-      { value:completed, label:'COMPLETED' },
-      { value:t.reduce((s,r)=>s+(r.Jumlah_Peserta||0),0), label:'TOTAL PESERTA' },
-      { value:avgPt, label:'AVG POST-TEST' },
+      { value:thisYearT.length, label:'TOTAL TRAINING' },
+      { value:rate+'%', label:'COMPLETION RATE' },
+      { value:outstanding, label:'OUTSTANDING' },
+      { value:done, label:'DONE' },
     ], PINK, PINK_BG);
     addTable(s1,
       ['Judul','Kategori','Tanggal','Divisi','Peserta','Avg PT','Status'],
       [2.6, 1.1, 1.0, 1.5, 0.8, 0.9, 1.1],
-      t.map(r => [r.Judul, r.Kategori, r.Tanggal_Mulai, r.Divisi_Target, r.Jumlah_Peserta, r.Avg_Post_Test??'-', r.Status]),
+      t.map(r => [r.Judul, r.Kategori, r.Tanggal_Mulai, r.Divisi_Target, r.Jumlah_Peserta, r.Avg_Post_Test??'-', r._status]),
       2.95, PINK);
     addFooter(s1, PINK);
   }
