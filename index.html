@@ -412,6 +412,12 @@
       <div>
         <label style="font-size:12px; font-weight:600; color:var(--text-2); display:block; margin-bottom:5px;">Materi Training (opsional)</label>
         <textarea id="fMateri" rows="3" style="width:100%; border:1px solid var(--border); border-radius:8px; padding:10px; font-size:13px; font-family:'Inter',sans-serif; resize:vertical;" placeholder="1 baris = 1 file, format: Nama Materi | Link Google Drive&#10;mis. Slide Materi | https://drive.google.com/..."></textarea>
+        <div id="materiDropzone" style="display:none; margin-top:8px; border:2px dashed var(--border); border-radius:10px; padding:18px; text-align:center; font-size:12px; color:var(--text-2); cursor:pointer;">
+          📁 Drag &amp; drop file di sini, atau klik untuk pilih<br>
+          <span style="font-size:11px; color:var(--text-3);">Otomatis ke-upload ke Google Drive & link ditambahkan ke atas</span>
+        </div>
+        <div id="materiHint" style="display:none; font-size:11px; color:var(--text-3); margin-top:6px;">Simpan training dulu (isi Judul + Tanggal) sebelum bisa upload file materi.</div>
+        <input type="file" id="materiFileInput" style="display:none">
       </div>
     </div>
 
@@ -1108,6 +1114,8 @@ document.getElementById('addTrainingBtn').addEventListener('click', () => {
   document.getElementById('trainerRows').innerHTML = '';
   trainerRowCount = 0;
   addTrainerRow();
+  document.getElementById('materiDropzone').style.display = 'none';
+  document.getElementById('materiHint').style.display = 'block';
   document.getElementById('trainingModal').style.display = 'flex';
 });
 
@@ -1126,12 +1134,57 @@ function openEditModal(trainingId){
   trainerRowCount = 0;
   const sessions = t.Sessions && t.Sessions.length ? t.Sessions : [{}];
   sessions.forEach(s => addTrainerRow(s));
+  document.getElementById('materiDropzone').style.display = 'block';
+  document.getElementById('materiHint').style.display = 'none';
   document.getElementById('trainingModal').style.display = 'flex';
 }
 
 document.getElementById('closeModalBtn').addEventListener('click', closeModal);
 document.getElementById('cancelModalBtn').addEventListener('click', closeModal);
 function closeModal(){ document.getElementById('trainingModal').style.display = 'none'; }
+
+/* ===== Drag & drop upload materi ===== */
+const dropzone = document.getElementById('materiDropzone');
+const materiFileInput = document.getElementById('materiFileInput');
+
+dropzone.addEventListener('click', () => materiFileInput.click());
+materiFileInput.addEventListener('change', (e) => {
+  if(e.target.files[0]) handleMateriFile(e.target.files[0]);
+});
+dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.style.borderColor = 'var(--pink)'; });
+dropzone.addEventListener('dragleave', () => { dropzone.style.borderColor = 'var(--border)'; });
+dropzone.addEventListener('drop', (e) => {
+  e.preventDefault();
+  dropzone.style.borderColor = 'var(--border)';
+  if(e.dataTransfer.files[0]) handleMateriFile(e.dataTransfer.files[0]);
+});
+
+function handleMateriFile(file){
+  if(!editingTrainingId){ alert('Simpan training dulu sebelum upload file.'); return; }
+  if(file.size > 15 * 1024 * 1024){ alert('File maksimal 15MB.'); return; }
+  const originalText = dropzone.innerHTML;
+  dropzone.innerHTML = `⏳ Mengupload ${file.name}...`;
+  const reader = new FileReader();
+  reader.onload = async () => {
+    const base64 = reader.result.split(',')[1];
+    try{
+      const res = await apiPost('uploadMateri', {
+        Training_ID: editingTrainingId,
+        FileName: file.name,
+        MimeType: file.type || 'application/octet-stream',
+        Base64Data: base64,
+      });
+      if(res && res.error){ throw new Error(res.error); }
+      document.getElementById('fMateri').value = res.Materi_Links;
+      dropzone.innerHTML = originalText;
+      alert(`${file.name} berhasil diupload.`);
+    } catch(err){
+      dropzone.innerHTML = originalText;
+      alert('Gagal upload: ' + err.message);
+    }
+  };
+  reader.readAsDataURL(file);
+}
 
 document.getElementById('addTrainerRowBtn').addEventListener('click', () => addTrainerRow());
 
