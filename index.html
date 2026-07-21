@@ -408,6 +408,11 @@
         </div>
         <div id="trainerRows" style="display:flex; flex-direction:column; gap:8px;"></div>
       </div>
+
+      <div>
+        <label style="font-size:12px; font-weight:600; color:var(--text-2); display:block; margin-bottom:5px;">Materi Training (opsional)</label>
+        <textarea id="fMateri" rows="3" style="width:100%; border:1px solid var(--border); border-radius:8px; padding:10px; font-size:13px; font-family:'Inter',sans-serif; resize:vertical;" placeholder="1 baris = 1 file, format: Nama Materi | Link Google Drive&#10;mis. Slide Materi | https://drive.google.com/..."></textarea>
+      </div>
     </div>
 
     <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:22px;">
@@ -1099,6 +1104,7 @@ document.getElementById('addTrainingBtn').addEventListener('click', () => {
   document.getElementById('fDivisi').value = '';
   document.getElementById('fTglMulai').value = '';
   document.getElementById('fTglSelesai').value = '';
+  document.getElementById('fMateri').value = '';
   document.getElementById('trainerRows').innerHTML = '';
   trainerRowCount = 0;
   addTrainerRow();
@@ -1115,6 +1121,7 @@ function openEditModal(trainingId){
   document.getElementById('fDivisi').value = t.Divisi_Target || '';
   document.getElementById('fTglMulai').value = t.Tanggal_Mulai || '';
   document.getElementById('fTglSelesai').value = t.Tanggal_Selesai || '';
+  document.getElementById('fMateri').value = (t.Materi_Links||[]).map(m => `${m.Nama} | ${m.URL}`).join('\n');
   document.getElementById('trainerRows').innerHTML = '';
   trainerRowCount = 0;
   const sessions = t.Sessions && t.Sessions.length ? t.Sessions : [{}];
@@ -1152,6 +1159,7 @@ document.getElementById('submitTrainingBtn').addEventListener('click', async () 
     Divisi_Target: document.getElementById('fDivisi').value.trim(),
     Status: 'Scheduled',
     Sessions: sessions,
+    Materi_Links: document.getElementById('fMateri').value.trim(),
   };
 
   try{
